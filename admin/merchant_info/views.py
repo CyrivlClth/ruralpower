@@ -1,4 +1,4 @@
-from flask import request
+from flask import request, jsonify
 from marshmallow import INCLUDE
 
 from admin.merchant_info.schema import DataSchema
@@ -13,8 +13,9 @@ class DataView(MethodView):
     def get(self):
         query = dict(_id=get_current_user().mch_id)
         data = MONGODB.get_db(self.col_name).find_one(query)
-        assert data
-        return DataSchema().load(data, unknown=INCLUDE)
+        if data is not None:
+            data = DataSchema().load(data, unknown=INCLUDE)
+        return jsonify(data)
 
     def post(self):
         data = request.get_json()

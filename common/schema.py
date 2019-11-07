@@ -1,6 +1,4 @@
-from dataclasses import dataclass
-
-from marshmallow import Schema, fields, post_load
+from marshmallow import Schema, fields, post_load, EXCLUDE
 
 
 class Pager(object):
@@ -23,6 +21,9 @@ class Pager(object):
 class PageSchema(Schema):
     page = fields.Integer(default=1)
     page_size = fields.Integer(default=10)
+
+    class Meta:
+        unknown = EXCLUDE
 
     @post_load
     def make_this(self, data, **kwargs):
