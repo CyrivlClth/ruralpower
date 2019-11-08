@@ -13,3 +13,15 @@ class LoginParam(Schema):
         if data is None:
             abort(403)
         return cls().load(data)
+
+
+class ChangeParam(Schema):
+    new_password = fields.Str(required=True)
+    old_password = fields.Str(required=True)
+
+    @classmethod
+    def get_param(cls):
+        data = request.get_json()
+        if data is None:
+            abort(403)
+        return cls().load(data)

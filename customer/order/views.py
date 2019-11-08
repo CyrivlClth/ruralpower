@@ -5,7 +5,7 @@ from werkzeug.exceptions import abort
 from common.auth import login_required
 from common.database import MONGODB
 from common.views import MethodView, page_param
-from customer.product.schema import DataSchema, QuerySchema
+from customer.order.schema import DataSchema, QuerySchema
 
 
 class DataView(MethodView):
