@@ -1,19 +1,19 @@
 import time
 
-from flask import jsonify
 from werkzeug.security import check_password_hash, generate_password_hash
 
+from admin.auth.schema import LoginParam, ChangePasswordParam
+from admin.util.context import get_current_user
 from common.auth import signer
-from common.database import MONGODB, get_uuid
+from common.database import MONGODB
+from common.errors import HandlerException
 from common.views import MethodView
-from admin.auth.schema import LoginParam
 
 
 class LoginView(MethodView):
     col_name = 'admin_user'
 
     def post(self):
-        print(time.time())
         user = LoginParam.get_param()
         query = dict(username=user['username'])
         obj = MONGODB.get_db(self.col_name).find_one(query)
@@ -25,15 +25,19 @@ class LoginView(MethodView):
         return result
 
 
-class RegisterView(MethodView):
+class ChangePassword(MethodView):
     col_name = 'admin_user'
 
     def post(self):
-        user = LoginParam.get_param()
-        user['password'] = generate_password_hash(user.get('password'))
-        user['_id'] = get_uuid()
-        result = MONGODB.get_db(self.col_name).update_one(dict(username=user.get('username')), {'$setOnInsert': user},
-                                                          upsert=True)
-        if result.upserted_id is None:
-            return '已被注册'
-        return jsonify(str(result.upserted_id))
+        pwd = ChangePasswordParam.get_param()
+        user_id = get_current_user().get_id()
+        user = MONGODB.get_db(self.col_name).find_one({'_id': user_id}, {'password': 1})
+        if not user:
+            raise HandlerException(status_code=500, message='unknown error')
+        if not check_password_hash(user['password'], pwd.get('old_password')):
+            raise HandlerException(status_code=403, message='error old password')
+        result = MONGODB.get_db(self.col_name).update_one({'_id': user_id}, {
+            '$set': {'password': generate_password_hash(pwd['new_password'])}})
+        if result.modified_count != 1:
+            raise HandlerException(status_code=403,message='change password failed')
+        return 'ok'

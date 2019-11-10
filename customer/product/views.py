@@ -17,7 +17,7 @@ class DataView(MethodView):
         print(dir(request.headers))
         pager = page_param()
         data = MONGODB.get_db(self.col_name).find(query, skip=pager.skip, limit=pager.limit)
-        assert data
+        assert data, 'not found'
         return jsonify(DataSchema(many=True).load(data, unknown=INCLUDE))
 
 
@@ -28,6 +28,5 @@ class DetailView(MethodView):
         query = QuerySchema().load(request.args)
         print(query)
         data = MONGODB.get_db(self.col_name).find_one(query)
-        if not data:
-            abort(404)
+        assert data, 'not found'
         return DataSchema().load(data, unknown=INCLUDE)

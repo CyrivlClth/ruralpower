@@ -9,12 +9,15 @@ from config import Config
 signer = TimedJSONWebSignatureSerializer(Config.JWT_SECRET, expires_in=Config.JWT_EXPIRED)
 
 
-def login_required(f):
+def login_required(f, s: TimedJSONWebSignatureSerializer = None):
+    if s is None:
+        s = signer
+
     @wraps(f)
     def d(*args, **kwargs):
         token = request.headers.get(Config.JWT_HEADER)
         try:
-            g.auth_data = signer.loads(token)
+            g.auth_data = s.loads(token)
             return f(*args, **kwargs)
         except SignatureExpired:
             abort(401)

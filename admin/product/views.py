@@ -32,8 +32,7 @@ class DetailView(MethodView):
     def get(self, _id):
         query = dict(_id=_id, mch_id=get_current_user().mch_id)
         data = MONGODB.get_db(self.col_name).find_one(query)
-        if not data:
-            abort(404)
+        assert data,'not found'
         return DataSchema().load(data, unknown=INCLUDE)
 
     def put(self, _id):

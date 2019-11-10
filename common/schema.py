@@ -1,4 +1,6 @@
+from flask import request
 from marshmallow import Schema, fields, post_load, EXCLUDE
+from werkzeug.exceptions import abort
 
 
 class Pager(object):
@@ -28,3 +30,17 @@ class PageSchema(Schema):
     @post_load
     def make_this(self, data, **kwargs):
         return Pager(**data)
+
+
+class BaseSchema(Schema):
+    @classmethod
+    def get_param(cls):
+        data = request.get_json()
+        if data is None:
+            abort(403)
+        return cls().load(data)
+
+
+class LoginParam(BaseSchema):
+    username = fields.Str(required=True)
+    password = fields.Str(required=True)
